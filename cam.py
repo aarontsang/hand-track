@@ -9,6 +9,7 @@ mp_hands = mp.solutions.hands
 
 PINCH_ON = 0.1   # go to "pinched" when dist <= this (pause)
 PINCH_OFF = 0.1000001  # go to "expanded" when dist >= this (play)
+IDLE = 0.15
 COOLDOWN_MS = 500 # avoid repeated triggers
 
 def media_pause():
@@ -97,29 +98,15 @@ def main():
                     media_pause()
                     pinched = True
                     last_action_ms = now_ms
-
-            elif pinched and right_dist >= PINCH_OFF:
+            elif pinched and PINCH_OFF < right_dist < IDLE:
                 # transition to expanded => PLAY
                 if now_ms - last_action_ms >= COOLDOWN_MS:
                     media_play()
                     pinched = False
                     last_action_ms = now_ms
-
-        # UI text
-        cv2.putText(
-            frame, f"State: {'PINCHED' if pinched else 'EXPANDED'}",
-            (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2
-        )
-        cv2.putText(
-            frame, "Right hand only | q to quit",
-            (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (180,180,180), 2
-        )
-        cv2.putText(
-            frame, f"PINCH_ON {PINCH_ON:.2f} | PINCH_OFF {PINCH_OFF:.2f}",
-            (10, 145), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (180,180,180), 2
-        )
-
-        cv2.imshow("Pinch Play/Pause (Right Hand)", frame)
+            elif right_dist >= IDLE:
+                print("Idle state, waiting for pinch or expand...")
+                
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
